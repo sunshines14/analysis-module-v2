@@ -2,7 +2,12 @@ import os
 
 from AnalysisModule import settings
 from Modules.dummy.example import test
+from Modules.dummy.sed import sed
 from WebAnalyzer.utils.media import frames_to_timecode
+
+import keras
+import subprocess
+
 
 class Dummy:
     model = None
@@ -12,8 +17,9 @@ class Dummy:
     def __init__(self):
         # TODO
         #   - initialize and load model here
-        model_path = os.path.join(self.path, "model.txt")
-        self.model = open(model_path, "r")
+        import keras
+        model_path = os.path.join(self.path, "model.h5")
+        self.model = keras.models.load_model(model_path)
 
     def inference_by_image(self, image_path):
         result = []
@@ -52,7 +58,11 @@ class Dummy:
 
         return self.result
 
-    def inference_by_video(self, frame_path_list, infos):
+    def inference_by_video(frame_path_list, infos):
+        import keras
+        model_path = os.path.join(self.path, "model.h5")
+        model = keras.models.load_model("model.h5")
+
         results = []
         video_info = infos['video_info']
         frame_urls = infos['frame_urls']
@@ -64,33 +74,30 @@ class Dummy:
             result["timestamp"] = frames_to_timecode((idx + 1) * fps, fps)
             results.append(result)
 
-        self.result = {'video_result': results}
+        self.result = results
 
         return self.result
 
     def inference_by_audio(self, audio_path, infos):
-        result = []
-        # TODO
-        #   - Inference using image path
-        #   -
-        result = {"audio_result": [
-            {
-                # 1 timestamp & multiple class
-                'label': [
-                    {'score': 1.0, 'description': 'class_name'},
-                    {'score': 1.0, 'description': 'class_name'}
-                ],
-                'timestamp': "00:00:01:00"
-            },
-            {
-                # 1 timestamp & 1 class
-                'label': [
-                    {'score': 1.0, 'description': 'class_name'}
-                ],
-                'timestamp': "00:00:01:00"
-            }
-        ]}
-        self.result = result
+        video_info = infos['video_info']
+        result_list = []
+        result_dict = {}
+        subprocess.call(['/workspace/Modules/dummy/sed/run_preproc.sh', audio_path])
+
+        with open('/workspace/Modules/dummy/sed/input/files.txt','r') as infile:
+            files = infile.readlines()
+            for i in range(len(files)):
+                file = files[i].replace('\n','')
+                feat_log = sed.feature(file)
+                idx = int(file.split('/')[-1].replace('.wav',''))
+                thres = 0.0
+                out_dict = sed.process(idx, thres, feat_log, self.model)
+                result_list.append(out_dict)
+        result_dict = {'audio_result': result_list}
+ 
+        self.result = result_dict
+        cmd = 'rm /workspace/Modules/dummy/sed/input/files.txt /workspace/Modules/dummy/sed/input/*.wav /workspace/Modules/dummy/sed/files/*.wav'
+        subprocess.call(cmd, shell=True)
 
         return self.result
 

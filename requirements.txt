@@ -7,6 +7,10 @@ celery==4.4.7
 requests
 mysqlclient==2.0.1
 mysql-connector
-mysql-connector-python
+mysql-connector-python==8.0.22
 django-mysql
 opencv-python
+keras
+tensorflow
+soundfile
+librosa
