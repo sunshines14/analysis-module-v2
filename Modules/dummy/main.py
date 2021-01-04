@@ -59,10 +59,6 @@ class Dummy:
         return self.result
 
     def inference_by_video(frame_path_list, infos):
-        import keras
-        model_path = os.path.join(self.path, "model.h5")
-        model = keras.models.load_model("model.h5")
-
         results = []
         video_info = infos['video_info']
         frame_urls = infos['frame_urls']
@@ -90,7 +86,7 @@ class Dummy:
                 file = files[i].replace('\n','')
                 feat_log = sed.feature(file)
                 idx = int(file.split('/')[-1].replace('.wav',''))
-                thres = 0.0
+                thres = 0.5
                 out_dict = sed.process(idx, thres, feat_log, self.model)
                 result_list.append(out_dict)
         result_dict = {'audio_result': result_list}

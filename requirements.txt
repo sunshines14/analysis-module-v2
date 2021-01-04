@@ -10,7 +10,7 @@ mysql-connector
 mysql-connector-python==8.0.22
 django-mysql
 opencv-python
-keras
-tensorflow
-soundfile
-librosa
+keras==2.4.3
+tensorflow-gpu==2.4.0
+soundfile==0.10.3.post1
+librosa==0.8.0
